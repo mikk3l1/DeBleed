@@ -1,9 +1,11 @@
-# Feature Specification: Desktop Scan Cleaner Application
+# Feature Specification: Desktop Scan Cleaner Application with OCR
 
 **Feature Branch**: `001-desktop-scan-cleaner`  
 **Created**: 2026-01-17  
 **Status**: Draft  
-**Input**: User description: "Build a desktop application that helps educators and students convert imperfect scanned book pages into clean, readable, single-page PDFs."
+**Input**: User description: "Build a desktop application that helps educators and students convert imperfect scanned book pages into clean, readable, single-page PDFs with OCR text extraction for accessibility."
+
+**Purpose**: Enable people with disabilities to access scanned educational materials through text-to-speech by cleaning scan layouts and extracting accurate text via OCR.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -77,13 +79,35 @@ Before exporting a cleaned 50-page document, a user wants to quickly scan throug
 
 ---
 
+### User Story 5 - Text Extraction for Accessibility (Priority: P1)
+
+A student with visual impairment receives scanned class notes and needs to convert them into a format that their screen reader can process. They need both a clean PDF and plain text output that preserves reading order and structure.
+
+**Why this priority**: This is a core accessibility requirement and primary use case. Without accurate text extraction, the application doesn't fulfill its mission of making scanned materials accessible to people with disabilities.
+
+**Independent Test**: Load a scanned document, process with OCR, export both searchable PDF and plain text file, verify text is readable by screen reader (NVDA, JAWS, VoiceOver) and preserves document structure. Demonstrates end-to-end accessibility workflow.
+
+**Acceptance Scenarios**:
+
+1. **Given** a cleaned document with OCR complete, **When** user selects export options, **Then** options include "Searchable PDF", "PDF + Text File", and "Text Only"
+2. **Given** user selects "Searchable PDF", **When** export completes, **Then** the PDF contains an invisible text layer that preserves reading order and can be accessed by screen readers
+3. **Given** user selects "PDF + Text File", **When** export completes, **Then** both a searchable PDF and a .txt file with extracted text are created
+4. **Given** user selects "Text Only", **When** export completes, **Then** a .txt file is created with text in reading order, preserving paragraph breaks
+5. **Given** OCR encounters low-confidence text regions, **When** text is extracted, **Then** uncertain words are flagged with [?] markers in text output to indicate potential errors
+6. **Given** exported text file is opened with screen reader, **When** text-to-speech is activated, **Then** content is read in correct reading order without layout artifacts
+
+---
+
 ### Edge Cases
 
 - **What happens when a page is blank or nearly blank?** System should detect minimal content and either skip the page or flag it for user confirmation before export.
 - **What happens when a page is severely skewed or rotated?** System should detect rotation and either auto-correct or flag for manual review. Severely skewed pages that cannot be confidently corrected should be flagged.
 - **What happens when gutter/bleed completely obscures primary page boundaries?** System must flag these pages as requiring manual review with clear indication that automatic detection failed.
-- **What happens when a scanned page contains multiple distinct columns or layout regions?** System should detect the primary reading region based on text density and geometric analysis, preserving multi-column layouts within the primary page.
-- **What happens when scanning created artifacts (shadows, bleed-through from reverse side)?** Preprocessing should handle common artifacts, but severe cases should be flagged if they interfere with boundary detection.
+- **What happens when a scanned page contains multiple distinct columns or layout regions?** System should detect the primary reading region based on text density and geometric analysis, preserving multi-column layouts within the primary page and maintaining correct reading order in OCR output.
+- **What happens when scanning created artifacts (shadows, bleed-through from reverse side)?** Preprocessing should handle common artifacts, but severe cases should be flagged if they interfere with boundary detection or OCR accuracy.
+- **What happens when OCR confidence is very low for certain words or regions?** System should flag low-confidence text and provide options to review/correct, or mark uncertain text in output with indicators.
+- **What happens when scanned pages contain non-text elements (diagrams, equations, images)?** OCR should skip or handle these gracefully, preserving layout in PDF but not attempting to extract non-existent text.
+- **What happens when scanned text is in multiple languages or contains mixed scripts?** OCR engine should support common languages and detect language automatically, or allow user to specify expected language.
 - **What happens when exported PDF already exists?** System should prompt user for overwrite confirmation or auto-append version numbers to prevent accidental data loss.
 - **What happens when processing very large documents (500+ pages)?** System must process pages incrementally without loading entire document into memory, providing progress indication and ability to pause/resume.
 
@@ -111,14 +135,36 @@ Before exporting a cleaned 50-page document, a user wants to quickly scan throug
 - **FR-018**: System MUST process multi-page documents incrementally without loading entire document into memory
 - **FR-019**: System MUST provide clear error messages when files cannot be opened or processed
 - **FR-020**: System MUST support common page orientations (portrait, landscape) and detect rotation when present
+- **FR-021**: System MUST perform OCR text extraction on cleaned page regions
+- **FR-022**: System MUST generate searchable PDFs with embedded text layer preserving reading order
+- **FR-023**: System MUST support exporting extracted text to plain text (.txt) format
+- **FR-024**: System MUST provide export options including "Searchable PDF", "PDF + Text File", and "Text Only"
+- **FR-025**: System MUST detect and preserve text reading order in multi-column layouts
+- **FR-026**: System MUST flag low-confidence OCR results for user review
+- **FR-027**: System MUST skip or gracefully handle non-text elements (images, diagrams) during OCR
+- **FR-028**: System MUST support common languages for OCR text recognition
+- **FR-029**: Exported text MUST be compatible with screen reader software (NVDA, JAWS, VoiceOver)
+- **FR-030**: System MUST preserve paragraph breaks and document structure in text export
+- **FR-021**: System MUST perform OCR text extraction on cleaned page regions
+- **FR-022**: System MUST generate searchable PDFs with embedded text layer preserving reading order
+- **FR-023**: System MUST support exporting extracted text to plain text (.txt) format
+- **FR-024**: System MUST provide export options including "Searchable PDF", "PDF + Text File", and "Text Only"
+- **FR-025**: System MUST detect and preserve text reading order in multi-column layouts
+- **FR-026**: System MUST flag low-confidence OCR results for user review
+- **FR-027**: System MUST skip or gracefully handle non-text elements (images, diagrams) during OCR
+- **FR-028**: System MUST support common languages for OCR text recognition
+- **FR-029**: Exported text MUST be compatible with screen reader software (NVDA, JAWS, VoiceOver)
+- **FR-030**: System MUST preserve paragraph breaks and document structure in text export
 
 ### Key Entities *(include if feature involves data)*
 
 - **Scanned Document**: Input PDF file containing imperfect scans with potential multi-page bleed, characterized by file path, page count, and processing status
-- **Page**: Individual page within a scanned document, with properties including page number, detected boundaries, confidence score, adjustment status, and preview image
+- **Page**: Individual page within a scanned document, with properties including page number, detected boundaries, confidence score, adjustment status, preview image, and OCR status
 - **Primary Page Region**: The geometric region within a scanned page representing the intended content, defined by coordinates (x, y, width, height) and confidence level
 - **Detected Boundary**: Calculated coordinates defining the primary page region, with associated confidence score and detection method metadata
-- **Export Job**: Processing task for generating cleaned PDF, tracking source document, selected pages, output path, and completion status
+- **OCR Result**: Extracted text from a page region, including text content, confidence scores, detected language, reading order, and flagged uncertain regions
+- **Text Block**: Structural unit of extracted text representing a paragraph or text region, with position, content, reading order sequence, and confidence
+- **Export Job**: Processing task for generating cleaned PDF and/or text output, tracking source document, selected pages, OCR status, output format, output path, and completion status
 - **Batch Queue**: Collection of export jobs for multi-document processing, with queue position, overall progress, and result summary
 
 ## Success Criteria *(mandatory)*
@@ -135,42 +181,57 @@ Before exporting a cleaned 50-page document, a user wants to quickly scan throug
 - **SC-008**: 90% of users can successfully clean their first document without consulting documentation or help resources
 - **SC-009**: Exported PDFs preserve original page content quality (no additional compression or quality loss beyond format conversion)
 - **SC-010**: Users receive clear actionable feedback when page detection fails or has low confidence, enabling them to take corrective action
+- **SC-011**: OCR text extraction achieves at least 95% character accuracy on clean, well-scanned text (standard textbook quality)
+- **SC-012**: Extracted text preserves reading order correctly in at least 90% of multi-column layouts
+- **SC-013**: Screen readers can successfully navigate and read exported searchable PDFs with proper text flow
+- **SC-014**: OCR processing adds no more than 2 seconds per page to total export time
+- **SC-015**: Users can export a 20-page document to searchable PDF + text file in under 60 seconds
 
 ## Assumptions *(optional)*
 
 - Input scans are in PDF format (most common format for scanned documents in educational settings)
+- Target users include people with disabilities who rely on screen readers and text-to-speech software
 - Target users have basic computer literacy and are familiar with file operations (open, save, drag-and-drop)
-- Scanned pages are predominantly text-based educational materials (textbooks, class notes, worksheets)
+- Scanned pages are predominantly text-based educational materials (textbooks, class notes, worksheets) in common languages (English, Spanish, French, German)
 - Desktop environment is Windows, macOS, or Linux with graphical display
 - Most scans have consistent orientation and layout within a single document
-- Users have sufficient disk space for both source and exported PDFs
+- Users have sufficient disk space for both source and exported PDFs/text files
 - Page detection accuracy is acceptable at 85%+ for typical use cases, with manual adjustment available for edge cases
+- OCR accuracy of 95%+ is acceptable for accessibility use cases, with manual correction available if needed
 - Application runs locally on user's machine (no cloud/server processing required initially)
+- Local OCR processing is acceptable even if slightly slower than cloud services, due to privacy and offline requirements
 
 ## Constraints *(optional)*
 
 - **Platform Compatibility**: Must run on Windows 10+, macOS 11+, and major Linux distributions
-- **No External Dependencies**: Should not require installation of additional OCR engines or image processing tools beyond bundled libraries
-- **Offline Capability**: Must function without internet connectivity (local processing only)
+- **Bundled OCR Engine**: OCR engine must be bundled with application or use OS-provided capabilities (no separate installation required)
+- **Offline Capability**: Must function without internet connectivity (local OCR processing only)
 - **File Format Support**: Initial version focuses on PDF input/output; other formats (JPEG, TIFF, PNG scans) are out of scope for P1
-- **Performance Baseline**: Page detection and preview generation must complete in under 500ms per page on modern desktop hardware
+- **Performance Baseline**: Page detection and preview generation must complete in under 500ms per page; OCR processing should add no more than 2 seconds per page
 - **Memory Constraints**: Must process documents page-by-page to support large documents on systems with limited RAM (4GB minimum)
+- **Accessibility Standards**: Exported searchable PDFs must comply with PDF/UA (Universal Accessibility) standards where feasible
+- **Language Support**: Initial release supports English OCR; additional languages can be added in future releases
 
 ## Dependencies *(optional)*
 
 - PDF rendering library for displaying page previews
 - Image processing library for layout detection and geometric analysis
+- OCR engine for text extraction (e.g., Tesseract or OS-provided OCR capabilities)
 - GUI framework supporting cross-platform desktop development
-- File system access for reading source PDFs and writing cleaned exports
+- PDF generation library for creating searchable PDFs with embedded text layers
+- File system access for reading source PDFs and writing cleaned exports and text files
 
 ## Out of Scope *(optional)*
 
-- OCR text extraction (focus is on layout/boundary detection, not text recognition)
+- Manual text correction/editing interface (users can edit exported .txt files in external editors)
+- Advanced OCR training or custom language model development
+- Handwriting recognition (focus is on printed text)
 - Cloud storage integration or document syncing
 - Collaboration features or multi-user access
-- Advanced image editing (contrast adjustment, denoising beyond basic preprocessing)
+- Advanced image editing beyond basic preprocessing required for OCR accuracy
 - Support for non-PDF input formats in initial release
 - Mobile/web application versions
 - Direct integration with scanning hardware
 - Automated batch processing via watch folders or scheduled tasks
-- Export to formats other than PDF
+- Export to formats other than PDF and plain text (DOCX, EPUB, etc. are out of scope)
+- Built-in text-to-speech playback (application produces accessible output for external screen readers)
