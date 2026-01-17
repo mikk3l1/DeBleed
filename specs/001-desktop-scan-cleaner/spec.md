@@ -14,6 +14,8 @@
 - Q: What confidence threshold should trigger flagging pages for manual review? → A: 80% confidence threshold (balanced - moderate flagging, good safety margin)
 - Q: What OCR confidence threshold should trigger flagging uncertain words with [?] markers? → A: 75% confidence threshold (balanced - catches uncertain text without over-flagging)
 - Q: Where should cleaned PDFs be saved by default? → A: Same directory as source file with "_cleaned" suffix
+- Q: Should rotation correction happen automatically or require user approval? → A: Auto-correct common angles (90°, 180°, 270°), flag unusual angles for review
+- Q: How should multi-column reading order be detected? → A: Left-to-right columns with language-aware detection for future RTL support
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -109,9 +111,9 @@ A student with visual impairment receives scanned class notes and needs to conve
 ### Edge Cases
 
 - **What happens when a page is blank or nearly blank?** System should detect minimal content and either skip the page or flag it for user confirmation before export.
-- **What happens when a page is severely skewed or rotated?** System should detect rotation and either auto-correct or flag for manual review. Severely skewed pages that cannot be confidently corrected should be flagged.
+- **What happens when a page is severely skewed or rotated?** System should auto-correct standard rotations (90°, 180°, 270°) automatically. Pages with unusual angles (e.g., 15°, 45°) or severe skew should be flagged for manual review.
 - **What happens when gutter/bleed completely obscures primary page boundaries?** System must flag these pages as requiring manual review with clear indication that automatic detection failed.
-- **What happens when a scanned page contains multiple distinct columns or layout regions?** System should detect the primary reading region based on text density and geometric analysis, preserving multi-column layouts within the primary page and maintaining correct reading order in OCR output.
+- **What happens when a scanned page contains multiple distinct columns or layout regions?** System should detect the primary reading region based on text density and geometric analysis, preserving multi-column layouts within the primary page and maintaining correct reading order in OCR output using left-to-right column flow (appropriate for English, Spanish, French, German).
 - **What happens when scanning created artifacts (shadows, bleed-through from reverse side)?** Preprocessing should handle common artifacts, but severe cases should be flagged if they interfere with boundary detection or OCR accuracy.
 - **What happens when OCR confidence is very low for certain words or regions?** System should flag low-confidence text and provide options to review/correct, or mark uncertain text in output with indicators.
 - **What happens when scanned pages contain non-text elements (diagrams, equations, images)?** OCR should skip or handle these gracefully, preserving layout in PDF but not attempting to extract non-existent text.
@@ -141,12 +143,12 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-016**: System MUST provide keyboard shortcuts for efficient page navigation and review
 - **FR-017**: System MUST filter/view pages by status (all, flagged for review, adjusted manually)
 - **FR-018**: System MUST process multi-page documents incrementally without loading entire document into memory
-- **FR-019**: System MUST provide clear error messages when files cannot be opened or processed
+- **FR-019**: System MUST provide clear error messages when files cannot be opened or processed; auto-correct standard rotations (90°, 180°, 270°) and flag unusual angles for manual review
 - **FR-020**: System MUST support common page orientations (portrait, landscape) and detect rotation when present
 - **FR-021**: System MUST perform OCR text extraction on cleaned page regions
 - **FR-022**: System MUST generate searchable PDFs with embedded text layer preserving reading order
 - **FR-023**: System MUST support exporting extracted text to plain text (.txt) format
-- **FR-024**: System MUST provide export options including "Searchable PDF", "PDF + Text File", and "Text Only"
+- **FR-024**: System MUST provide export options including "Searchable PDF", "PDF + Text using left-to-right column priority (with language-aware detection for future right-to-left language support) File", and "Text Only"
 - **FR-025**: System MUST detect and preserve text reading order in multi-column layouts
 - **FR-026**: System MUST flag low-confidence OCR results (below 75% confidence score) for user review
 - **FR-027**: System MUST skip or gracefully handle non-text elements (images, diagrams) during OCR
