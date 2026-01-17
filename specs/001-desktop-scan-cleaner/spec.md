@@ -7,6 +7,14 @@
 
 **Purpose**: Enable people with disabilities to access scanned educational materials through text-to-speech by cleaning scan layouts and extracting accurate text via OCR.
 
+## Clarifications
+
+### Session 2026-01-17
+
+- Q: What confidence threshold should trigger flagging pages for manual review? → A: 80% confidence threshold (balanced - moderate flagging, good safety margin)
+- Q: What OCR confidence threshold should trigger flagging uncertain words with [?] markers? → A: 75% confidence threshold (balanced - catches uncertain text without over-flagging)
+- Q: Where should cleaned PDFs be saved by default? → A: Same directory as source file with "_cleaned" suffix
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Single Document Cleanup (Priority: P1)
@@ -120,7 +128,7 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-003**: System MUST analyze each scanned page to detect layout regions and identify the primary page region
 - **FR-004**: System MUST visually display detected page boundaries on page previews
 - **FR-005**: System MUST distinguish between primary content pages and secondary elements (gutters, margins, bleed, adjacent pages)
-- **FR-006**: System MUST preserve original reading order of pages in exported PDFs
+- **FR-006**: System MUST preserve original reading order of pages in exported PDFs (below 80% confidence score)
 - **FR-007**: System MUST export cleaned PDFs containing only primary page regions
 - **FR-008**: System MUST provide page thumbnail grid view for document overview
 - **FR-009**: System MUST provide detailed page preview for individual page inspection
@@ -128,7 +136,7 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-011**: System MUST provide real-time preview updates when boundaries are adjusted
 - **FR-012**: System MUST flag pages where automatic boundary detection has low confidence
 - **FR-013**: System MUST provide clear visual indicators for pages requiring manual review
-- **FR-014**: System MUST support batch processing of multiple documents with progress indication
+- **FR-014**: System MUST support batch processing of multiple documents with progr (source filename with "_cleaned" suffix) in the same directory as the source file by defaultess indication
 - **FR-015**: System MUST generate cleaned PDFs with predictable naming conventions
 - **FR-016**: System MUST provide keyboard shortcuts for efficient page navigation and review
 - **FR-017**: System MUST filter/view pages by status (all, flagged for review, adjusted manually)
@@ -140,17 +148,7 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-023**: System MUST support exporting extracted text to plain text (.txt) format
 - **FR-024**: System MUST provide export options including "Searchable PDF", "PDF + Text File", and "Text Only"
 - **FR-025**: System MUST detect and preserve text reading order in multi-column layouts
-- **FR-026**: System MUST flag low-confidence OCR results for user review
-- **FR-027**: System MUST skip or gracefully handle non-text elements (images, diagrams) during OCR
-- **FR-028**: System MUST support common languages for OCR text recognition
-- **FR-029**: Exported text MUST be compatible with screen reader software (NVDA, JAWS, VoiceOver)
-- **FR-030**: System MUST preserve paragraph breaks and document structure in text export
-- **FR-021**: System MUST perform OCR text extraction on cleaned page regions
-- **FR-022**: System MUST generate searchable PDFs with embedded text layer preserving reading order
-- **FR-023**: System MUST support exporting extracted text to plain text (.txt) format
-- **FR-024**: System MUST provide export options including "Searchable PDF", "PDF + Text File", and "Text Only"
-- **FR-025**: System MUST detect and preserve text reading order in multi-column layouts
-- **FR-026**: System MUST flag low-confidence OCR results for user review
+- **FR-026**: System MUST flag low-confidence OCR results (below 75% confidence score) for user review
 - **FR-027**: System MUST skip or gracefully handle non-text elements (images, diagrams) during OCR
 - **FR-028**: System MUST support common languages for OCR text recognition
 - **FR-029**: Exported text MUST be compatible with screen reader software (NVDA, JAWS, VoiceOver)
