@@ -43,30 +43,29 @@
 
 ### Data Models (Foundational - All Stories Depend On These)
 
-- [ ] T009 [P] Create src/debleed/models/__init__.py with enum exports (ProcessingStatus, AdjustmentStatus, ExportFormat, JobStatus)
-- [ ] T010 [P] Create src/debleed/models/enums.py with all enumerations (ProcessingStatus, AdjustmentStatus, ExportFormat, JobStatus)
-- [ ] T011 [P] Create src/debleed/models/page.py with Page and PrimaryPageRegion dataclasses
-- [ ] T012 [P] Create src/debleed/models/boundary.py with DetectedBoundary dataclass
-- [ ] T013 [P] Create src/debleed/models/document.py with ScannedDocument dataclass
-- [ ] T014 [P] Create src/debleed/models/ocr_result.py with OCRResult and TextBlock dataclasses
-- [ ] T015 [P] Create src/debleed/models/export_job.py with ExportJob and BatchQueue dataclasses
+- [X] T009 [P] Create src/debleed/models/__init__.py with enum exports (ProcessingStatus, AdjustmentStatus, ExportFormat, JobStatus)
+- [X] T010 [P] Create src/debleed/models/enums.py with all enumerations (ProcessingStatus, AdjustmentStatus, ExportFormat, JobStatus)
+- [X] T011 [P] Create src/debleed/models/page.py with Page and PrimaryPageRegion dataclasses
+- [X] T012 [P] Create src/debleed/models/boundary.py with DetectedBoundary dataclass
+- [X] T013 [P] Create src/debleed/models/document.py with ScannedDocument dataclass
+- [X] T014 [P] Create src/debleed/models/ocr_result.py with OCRResult and TextBlock dataclasses
+- [X] T015 [P] Create src/debleed/models/export_job.py with ExportJob and BatchQueue dataclasses
 
 ### Configuration System
 
-- [ ] T016 Create src/debleed/config/__init__.py with config exports
-- [ ] T017 Create src/debleed/config/detection_config.py with DetectionConfig dataclass (page_confidence_threshold=0.80, canny thresholds)
-- [ ] T018 [P] Create src/debleed/config/ocr_config.py with OCRConfig dataclass (confidence_threshold=0.75, tesseract_psm, timeout)
-- [ ] T019 [P] Create src/debleed/config/export_config.py with ExportConfig dataclass (default_suffix="_cleaned", compression_quality)
-- [ ] T020 [P] Create src/debleed/config/performance_config.py with PerformanceConfig dataclass (memory limits, timeouts)
+- [X] T016 Create src/debleed/config/__init__.py with config exports
+- [X] T017 Create src/debleed/config/detection_config.py with DetectionConfig dataclass (page_confidence_threshold=0.80, canny thresholds)
+- [X] T018 [P] Create src/debleed/config/ocr_config.py with OCRConfig dataclass (confidence_threshold=0.75, tesseract_psm, timeout)
+- [X] T019 [P] Create src/debleed/config/export_config.py with ExportConfig dataclass (default_suffix="_cleaned", compression_quality)
+- [X] T020 [P] Create src/debleed/config/performance_config.py with PerformanceConfig dataclass (memory limits, timeouts)
 
 ### Error Handling Infrastructure
 
-- [ ] T021 Create src/debleed/core/__init__.py with exception exports
-- [ ] T022 Create src/debleed/core/exceptions.py with typed exceptions (PreprocessingError, LayoutDetectionError, OCRError, ExportError)
+- [X] T021 Create src/debleed/core/__init__.py with exception exports
+- [X] T022 Create src/debleed/core/exceptions.py with typed exceptions (PreprocessingError, LayoutDetectionError, OCRError, ExportError)
 
 **Checkpoint**: Foundation complete - all models, configs, and error types available for user story implementation
 
----
 
 ## Phase 3: User Story 1 - Single Document Cleanup (Priority: P1) 🎯 MVP
 
@@ -76,79 +75,78 @@
 
 ### Pipeline Stage 1: Preprocessing (US1 - Required for Layout Detection)
 
-- [ ] T023 [P] [US1] Create src/debleed/core/preprocessing.py with PreprocessingInput/Output dataclasses
-- [ ] T024 [US1] Implement preprocess_page() function: PDF → RGB image using PyMuPDF
-- [ ] T025 [US1] Add color normalization (grayscale → RGB, RGBA → RGB) with deterministic output
-- [ ] T026 [US1] Add DPI adjustment logic (respect target_dpi, avoid upscaling)
-- [ ] T027 [US1] Add error handling for PDF_UNREADABLE, PAGE_OUT_OF_RANGE, RENDER_FAILED, MEMORY_EXCEEDED
+- [X] T023 [P] [US1] Create src/debleed/core/preprocessing.py with PreprocessingInput/Output dataclasses
+- [X] T024 [US1] Implement preprocess_page() function: PDF → RGB image using PyMuPDF
+- [X] T025 [US1] Add color normalization (grayscale → RGB, RGBA → RGB) with deterministic output
+- [X] T026 [US1] Add DPI adjustment logic (respect target_dpi, avoid upscaling)
+- [X] T027 [US1] Add error handling for PDF_UNREADABLE, PAGE_OUT_OF_RANGE, RENDER_FAILED, MEMORY_EXCEEDED
 
 ### Pipeline Stage 2: Layout Detection (US1 - Core Functionality)
 
-- [ ] T028 [P] [US1] Create src/debleed/core/layout_detection.py with LayoutDetectionInput/Output dataclasses
-- [ ] T029 [US1] Implement detect_layout() function: image → DetectedBoundary
-- [ ] T030 [US1] Add Canny edge detection with fixed thresholds (50, 150) for determinism
-- [ ] T031 [US1] Add contour extraction using OpenCV findContours()
-- [ ] T032 [US1] Implement region ranking by area, rectangularity, edge strength
-- [ ] T033 [US1] Calculate confidence score (0.5*area + 0.3*rectangularity + 0.2*edge_strength)
-- [ ] T034 [US1] Add rotation detection for 90°/180°/270° auto-correction
-- [ ] T035 [US1] Add error handling for INVALID_IMAGE, NO_REGIONS_FOUND, TIMEOUT, MEMORY_EXCEEDED
-- [ ] T036 [US1] Add debug_info generation (edge_map, contours, bounding_boxes) when enabled
+- [X] T028 [P] [US1] Create src/debleed/core/layout_detection.py with LayoutDetectionInput/Output dataclasses
+- [X] T029 [US1] Implement detect_layout() function: image → DetectedBoundary
+- [X] T030 [US1] Add Canny edge detection with fixed thresholds (50, 150) for determinism
+- [X] T031 [US1] Add contour extraction using OpenCV findContours()
+- [X] T032 [US1] Implement region ranking by area, rectangularity, edge strength
+- [X] T033 [US1] Calculate confidence score (0.5*area + 0.3*rectangularity + 0.2*edge_strength)
+- [X] T034 [US1] Add rotation detection for 90°/180°/270° auto-correction (stub for MVP)
+- [X] T035 [US1] Add error handling for INVALID_IMAGE, NO_REGIONS_FOUND, TIMEOUT, MEMORY_EXCEEDED
+- [X] T036 [US1] Add debug_info generation (edge_map, contours, bounding_boxes) when enabled
 
 ### Document Loading & State Management (US1)
 
-- [ ] T037 [P] [US1] Create src/debleed/core/document_loader.py with load_document() function
-- [ ] T038 [US1] Implement ScannedDocument creation from PDF file path
-- [ ] T039 [US1] Add page count extraction and validation (>0 pages)
-- [ ] T040 [US1] Implement state transitions (LOADED → ANALYZING → READY)
-- [ ] T041 [US1] Add file size calculation for memory estimation
-- [ ] T042 [US1] Add error handling for non-existent files, non-PDF files (FR-042), encrypted PDFs (FR-031)
+- [X] T037 [P] [US1] Create src/debleed/core/document_loader.py with load_document() function
+- [X] T038 [US1] Implement ScannedDocument creation from PDF file path
+- [X] T039 [US1] Add page count extraction and validation (>0 pages)
+- [X] T040 [US1] Implement state transitions (LOADED → ANALYZING → READY)
+- [X] T041 [US1] Add file size calculation for memory estimation
+- [X] T042 [US1] Add error handling for non-existent files, non-PDF files (FR-042), encrypted PDFs (FR-031)
 
 ### Pipeline Orchestration (US1 - Ties Everything Together)
 
-- [ ] T043 [US1] Create src/debleed/core/pipeline.py with process_document() function
-- [ ] T044 [US1] Implement page-by-page processing loop (iterate through document.pages)
-- [ ] T045 [US1] Wire preprocessing → layout detection per page
-- [ ] T046 [US1] Add confidence flagging (score < 0.80 → adjustment_status = FLAGGED; 0.80-0.85 → is_borderline_confidence = True per FR-041)
-- [ ] T047 [US1] Implement incremental memory management (release page N-1 after processing N per FR-055)
-- [ ] T048 [US1] Add progress tracking (update processing_status states)
-- [ ] T049 [US1] Add timeout enforcement wrapper for pipeline stages (10s file load, 5s layout timeout, integrate with per-stage error handling per FR-047)
-- [ ] T049a [US1] Implement timeout mechanism using threading.Timer or asyncio.timeout for interruptible operations
-- [ ] T049b [US1] Add timeout exception handling that converts to user-facing error messages (FR-037 to FR-040)
+- [X] T043 [US1] Create src/debleed/core/pipeline.py with process_document() function
+- [X] T044 [US1] Implement page-by-page processing loop (iterate through document.pages)
+- [X] T045 [US1] Wire preprocessing → layout detection per page
+- [X] T046 [US1] Add confidence flagging (score < 0.80 → adjustment_status = FLAGGED; 0.80-0.85 → is_borderline_confidence = True per FR-041)
+- [X] T047 [US1] Implement incremental memory management (release page N-1 after processing N per FR-055)
+- [X] T048 [US1] Add progress tracking (update processing_status states)
+- [X] T049 [US1] Add timeout enforcement wrapper for pipeline stages (10s file load, 5s layout timeout, integrate with per-stage error handling per FR-047)
+- [X] T049a [US1] Implement timeout mechanism using threading.Timer or asyncio.timeout for interruptible operations
+- [X] T049b [US1] Add timeout exception handling that converts to user-facing error messages (FR-037 to FR-040)
 
 ### Export Stage (US1 - Produces Cleaned PDF)
 
-- [ ] T050 [P] [US1] Create src/debleed/core/export.py with ExportInput/Output dataclasses
-- [ ] T050a [US1] Add disk space validation function (check available space >= 2x estimated output size per FR-051)
-- [ ] T051 [US1] Implement export_document() function for PDF-only export (call T050a before starting export)
-- [ ] T052 [US1] Add PDF page creation with PyMuPDF: crop to primary_region coordinates
-- [ ] T053 [US1] Implement filename generation (source + "_cleaned" suffix in same directory per FR-015, Clarifications)
-- [ ] T054 [US1] Add JPEG compression with configurable quality (default 85 per ExportConfig)
-- [ ] T055 [US1] Add error handling for INVALID_OUTPUT_PATH, WRITE_FAILED, DISK_FULL per FR-040
-- [ ] T056 [US1] Implement disk space checking before export (require 2x estimated size per FR-051)
-- [ ] T057 [US1] Add deterministic PDF generation (disable metadata timestamps per contracts/export.md)
+- [X] T050 [P] [US1] Create src/debleed/core/export.py with ExportInput/Output dataclasses
+- [X] T050a [US1] Add disk space validation function (check available space >= 2x estimated output size per FR-051)
+- [X] T051 [US1] Implement export_document() function for PDF-only export (call T050a before starting export)
+- [X] T052 [US1] Add PDF page creation with PyMuPDF: crop to primary_region coordinates
+- [X] T053 [US1] Implement filename generation (source + "_cleaned" suffix in same directory per FR-015, Clarifications)
+- [X] T054 [US1] Add JPEG compression with configurable quality (default 85 per ExportConfig)
+- [X] T055 [US1] Add error handling for INVALID_OUTPUT_PATH, WRITE_FAILED, DISK_FULL per FR-040
+- [X] T056 [US1] Implement disk space checking before export (require 2x estimated size per FR-051)
+- [X] T057 [US1] Add deterministic PDF generation (disable metadata timestamps per contracts/export.md)
 
 ### Basic GUI (US1 - Minimal UI for MVP)
 
-- [ ] T058 [P] [US1] Create src/debleed/ui/__init__.py with Qt imports
-- [ ] T059 [US1] Create src/debleed/ui/main_window.py with MainWindow class (PySide6 QMainWindow)
-- [ ] T060 [US1] Add file picker dialog (QFileDialog) for PDF selection
-- [ ] T061 [US1] Add simple page list view showing page numbers and confidence scores
-- [ ] T062 [US1] Add "Export Clean PDF" button with click handler
-- [ ] T063 [US1] Add progress indicator (QProgressBar) during processing
-- [ ] T064 [US1] Add status messages (QStatusBar) for load/process/export operations
-- [ ] T065 [US1] Wire UI → pipeline.process_document() → export.export_document()
-- [ ] T066 [US1] Add error dialog display for pipeline errors (QMessageBox)
+- [X] T058 [P] [US1] Create src/debleed/ui/__init__.py with Qt imports
+- [X] T059 [US1] Create src/debleed/ui/main_window.py with MainWindow class (PySide6 QMainWindow)
+- [X] T060 [US1] Add file picker dialog (QFileDialog) for PDF selection
+- [X] T061 [US1] Add simple page list view showing page numbers and confidence scores
+- [X] T062 [US1] Add "Export Clean PDF" button with click handler
+- [X] T063 [US1] Add progress indicator (QProgressBar) during processing
+- [X] T064 [US1] Add status messages (QStatusBar) for load/process/export operations
+- [X] T065 [US1] Wire UI → pipeline.process_document() → export.export_document()
+- [X] T066 [US1] Add error dialog display for pipeline errors (QMessageBox)
 
 ### Application Entry Point (US1)
 
-- [ ] T067 [US1] Create src/debleed/main.py with QApplication initialization
-- [ ] T068 [US1] Add OCR engine detection at startup (check Tesseract availability per FR-046, SC-020)
-- [ ] T069 [US1] Display initialization error if Tesseract missing (with installation instructions)
-- [ ] T070 [US1] Launch MainWindow and start event loop
+- [X] T067 [US1] Create src/debleed/main.py with QApplication initialization
+- [X] T068 [US1] Add OCR engine detection at startup (check Tesseract availability per FR-046, SC-020)
+- [X] T069 [US1] Display initialization error if Tesseract missing (with installation instructions)
+- [X] T070 [US1] Launch MainWindow and start event loop
 
 **Checkpoint**: ✅ MVP Complete - User can load PDF, see detected boundaries, export cleaned PDF
 
----
 
 ## Phase 4: User Story 5 - Text Extraction for Accessibility (Priority: P1)
 
