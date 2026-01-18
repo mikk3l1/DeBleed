@@ -14,10 +14,10 @@
 - [ ] CHK001 - Are success criteria defined for all five user stories (P1: Single Document, P2: Boundary Adjustment, P3: Batch Processing, P2: Preview, P1: Accessibility)? [Completeness, Spec §User Scenarios]
 - [ ] CHK002 - Are requirements specified for the initial document loading workflow (file picker, drag-and-drop, validation)? [Coverage, Spec §FR-002]
 - [ ] CHK003 - Are requirements defined for all export formats mentioned in FR-024 (Searchable PDF, PDF + Text File, Text Only)? [Completeness, Spec §FR-024]
-- [ ] CHK004 - Are batch processing error recovery requirements specified (what happens when one document fails in a batch of 20)? [Gap, Edge Cases]
-- [ ] CHK005 - Are requirements defined for the "pause/resume" functionality mentioned for large documents (500+ pages)? [Gap, Edge Cases §Very Large Documents]
+- [x] CHK004 - Are batch processing error recovery requirements specified (what happens when one document fails in a batch of 20)? [RESOLVED: FR-032, SC-016]
+- [x] CHK005 - Are requirements defined for the "pause/resume" functionality mentioned for large documents (500+ pages)? [RESOLVED: FR-034, SC-017]
 - [ ] CHK006 - Are UI requirements specified for the boundary adjustment interface (click zones, drag handles, keyboard shortcuts)? [Gap, Spec §FR-010]
-- [ ] CHK007 - Are requirements defined for how manual adjustments are saved/persisted (in-memory only, or with document)? [Gap, Spec §FR-010]
+- [x] CHK007 - Are requirements defined for how manual adjustments are saved/persisted (in-memory only, or with document)? [RESOLVED: FR-035, SC-018]
 - [ ] CHK008 - Are requirements specified for progress indication granularity during batch processing (per-document, per-page, both)? [Clarity, Spec §FR-014]
 - [ ] CHK009 - Are thumbnail generation requirements specified (size, quality, lazy-loading strategy, caching)? [Gap, Spec §FR-008]
 - [ ] CHK010 - Are requirements defined for keyboard navigation between all UI views (file list, thumbnail grid, preview, adjustment)? [Coverage, Spec §FR-016]
@@ -63,9 +63,9 @@
 - [ ] CHK038 - Are alternate flow requirements defined for "user cancels export mid-process"? [Gap, Alternate Flow]
 - [ ] CHK039 - Are alternate flow requirements defined for "user changes export format after previewing"? [Gap, Alternate Flow]
 - [ ] CHK040 - Are exception flow requirements defined for "OCR engine not available or fails to initialize"? [Gap, Exception Flow]
-- [ ] CHK041 - Are exception flow requirements defined for "source PDF is password-protected or encrypted"? [Gap, Exception Flow]
-- [ ] CHK042 - Are exception flow requirements defined for "output directory becomes read-only during export"? [Gap, Exception Flow]
-- [ ] CHK043 - Are recovery flow requirements defined for "application crashes during batch processing - can user resume"? [Gap, Recovery Flow]
+- [x] CHK041 - Are exception flow requirements defined for "source PDF is password-protected or encrypted"? [RESOLVED: FR-031]
+- [x] CHK042 - Are exception flow requirements defined for "output directory becomes read-only during export"? [RESOLVED: FR-040]
+- [x] CHK043 - Are recovery flow requirements defined for "application crashes during batch processing - can user resume"? [RESOLVED: FR-036]
 - [ ] CHK044 - Are recovery flow requirements defined for "user closes application with unsaved manual adjustments"? [Gap, Recovery Flow]
 
 ## Edge Case Coverage
@@ -75,11 +75,11 @@
 - [ ] CHK047 - Are requirements defined for the "gutter/bleed obscures boundaries" edge case? [Completeness, Edge Cases]
 - [ ] CHK048 - Are requirements defined for the "scanning artifacts" edge case (shadows, bleed-through)? [Completeness, Edge Cases]
 - [ ] CHK049 - Are requirements defined for the "existing export file" edge case (overwrite confirmation)? [Completeness, Edge Cases]
-- [ ] CHK050 - Are requirements defined for edge case: PDF with zero pages or corrupt page count metadata? [Gap]
+- [x] CHK050 - Are requirements defined for edge case: PDF with zero pages or corrupt page count metadata? [RESOLVED: FR-037 (preprocessing error handling)]
 - [ ] CHK051 - Are requirements defined for edge case: Page dimensions exceed memory limits (e.g., poster-size scan at high DPI)? [Gap]
 - [ ] CHK052 - Are requirements defined for edge case: Batch processing when disk space becomes insufficient mid-batch? [Gap]
 - [ ] CHK053 - Are requirements defined for edge case: Multi-column text with non-standard column count (3+ columns, irregular spacing)? [Coverage, Edge Cases §Multi-Column]
-- [ ] CHK054 - Are requirements defined for edge case: Mixed page orientations within single document (some portrait, some landscape)? [Gap]
+- [x] CHK054 - Are requirements defined for edge case: Mixed page orientations within single document (some portrait, some landscape)? [RESOLVED: FR-033]
 
 ## Non-Functional Requirements: Performance
 
@@ -109,7 +109,7 @@
 
 ## Non-Functional Requirements: Reliability
 
-- [ ] CHK072 - Are crash recovery requirements specified (save application state, recover in-progress batch jobs)? [Gap]
+- [x] CHK072 - Are crash recovery requirements specified (save application state, recover in-progress batch jobs)? [RESOLVED: FR-036]
 - [ ] CHK073 - Are data validation requirements specified (verify PDF format before processing, validate export file integrity)? [Gap]
 - [ ] CHK074 - Are timeout requirements specified for individual operations (prevent infinite hangs on corrupt files)? [Gap]
 - [ ] CHK075 - Are requirements defined for handling partial failures (e.g., OCR succeeds on 18/20 pages)? [Gap]
@@ -131,7 +131,7 @@
 - [ ] CHK085 - Is there ambiguity in FR-006 "preserve original reading order" - does this apply to flagged pages, or are they excluded/reordered? [Ambiguity, Spec §FR-006]
 - [ ] CHK086 - Is there ambiguity in "queue them for processing" (User Story 3) - is this FIFO, priority-based, or user-reorderable? [Ambiguity, User Story 3]
 - [ ] CHK087 - Is there ambiguity in "common artifacts" (Edge Cases) - which artifacts are handled vs flagged? [Ambiguity, Edge Cases]
-- [ ] CHK088 - Is there conflict between SC-003 (85% detection accuracy) and FR-012 (flag low confidence <80%) - are 80-85% pages usable without review? [Conflict, Spec §SC-003, FR-012]
+- [x] CHK088 - Is there conflict between SC-003 (85% detection accuracy) and FR-012 (flag low confidence <80%) - are 80-85% pages usable without review? [RESOLVED: FR-041 clarifies 80-85% pages included but highlighted as "borderline confidence"]
 - [ ] CHK089 - Is there ambiguity in "incremental processing" - are partially processed documents exportable or must all pages complete? [Ambiguity, Spec §FR-018]
 - [ ] CHK090 - Is there ambiguity in "manual correction available if needed" (Assumptions) - where/how is manual text correction performed? [Ambiguity, Assumptions]
 
@@ -159,7 +159,7 @@
 - [ ] CHK104 - Are layout detection algorithm requirements (contour analysis, geometric ranking) specified or only outcomes? [Clarity, contracts/layout.md]
 - [ ] CHK105 - Are OCR configuration requirements specified (Tesseract PSM mode, language selection, timeout values)? [Gap, contracts/ocr.md]
 - [ ] CHK106 - Are export format requirements specified for each ExportFormat (SEARCHABLE_PDF, PDF_AND_TEXT, TEXT_ONLY)? [Completeness, contracts/export.md, Spec §FR-024]
-- [ ] CHK107 - Are error handling requirements defined for each pipeline stage failure (preprocessing, layout, OCR, export)? [Coverage, contracts/]
+- [x] CHK107 - Are error handling requirements defined for each pipeline stage failure (preprocessing, layout, OCR, export)? [RESOLVED: FR-037 (preprocessing), FR-038 (layout), FR-039 (OCR), FR-040 (export)]
 - [ ] CHK108 - Are requirements specified for pipeline stage performance limits (<200ms preprocessing, <500ms layout, <2s OCR)? [Coverage, contracts/, Spec §Performance Goals]
 
 ## Constitutional Compliance Verification
@@ -183,6 +183,9 @@
 ## Summary Statistics
 
 **Total Items**: 118  
+**Resolved Items**: 11 (CHK004, CHK005, CHK007, CHK041, CHK042, CHK043, CHK050, CHK054, CHK072, CHK088, CHK107)  
+**Remaining Items**: 107  
+
 **Requirement Quality Dimensions Covered**:
 - Completeness: 25 items
 - Clarity: 18 items
@@ -203,9 +206,15 @@
 - Constitutional Compliance: CHK109-CHK113
 
 **High-Priority Items** (Blocking Issues):
-- CHK004 (batch error recovery)
-- CHK041 (encrypted PDF handling)
-- CHK088 (confidence threshold conflict)
-- CHK107 (pipeline error handling)
+- ✅ CHK004 (batch error recovery) - RESOLVED: FR-032
+- ✅ CHK041 (encrypted PDF handling) - RESOLVED: FR-031
+- ✅ CHK088 (confidence threshold conflict) - RESOLVED: FR-041
+- ✅ CHK107 (pipeline error handling) - RESOLVED: FR-037, FR-038, FR-039, FR-040
 
-**Recommendation**: Address gaps and ambiguities flagged as [Gap] and [Ambiguity] before implementation. Resolve conflicts flagged as [Conflict]. Ensure all [Completeness] items are addressed for comprehensive specification coverage.
+**Critical Gaps Resolved**:
+- ✅ CHK005 (pause/resume for large documents) - RESOLVED: FR-034
+- ✅ CHK007 (manual adjustment persistence) - RESOLVED: FR-035
+- ✅ CHK072 (crash recovery) - RESOLVED: FR-036
+- ✅ CHK054 (mixed page orientations) - RESOLVED: FR-033
+
+**Recommendation**: All high-priority blockers resolved. Continue addressing remaining gaps and ambiguities flagged as [Gap] and [Ambiguity]. Ensure all [Completeness] items are addressed for comprehensive specification coverage.

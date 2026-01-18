@@ -119,7 +119,11 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **What happens when scanned pages contain non-text elements (diagrams, equations, images)?** OCR should skip or handle these gracefully, preserving layout in PDF but not attempting to extract non-existent text.
 - **What happens when scanned text is in multiple languages or contains mixed scripts?** OCR engine should support common languages and detect language automatically, or allow user to specify expected language.
 - **What happens when exported PDF already exists?** System should prompt user for overwrite confirmation or auto-append version numbers to prevent accidental data loss.
-- **What happens when processing very large documents (500+ pages)?** System must process pages incrementally without loading entire document into memory, providing progress indication and ability to pause/resume.
+- **What happens when processing very large documents (500+ pages)?** System must process pages incrementally without loading entire document into memory, providing progress indication and ability to pause/resume (addressed by FR-034).
+- **What happens when a document in batch processing fails?** System continues processing remaining documents, flags the failed document with specific error details, and provides summary at completion showing success/failure status for each document (addressed by FR-032).
+- **What happens when the application crashes during batch processing?** System saves batch queue state periodically and offers to resume incomplete batches on next application launch (addressed by FR-036).
+- **What happens when a source PDF is password-protected?** System displays clear error message indicating password protection is not supported and skips the file in batch processing (addressed by FR-031).
+- **What happens with pages that have 80-85% confidence scores?** These pages are included in automatic export (above the 80% threshold) but highlighted in the review interface as "borderline confidence" to allow optional user verification (addressed by FR-041).
 
 ## Requirements *(mandatory)*
 
@@ -155,6 +159,18 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-028**: System MUST support common languages for OCR text recognition
 - **FR-029**: Exported text MUST be compatible with screen reader software (NVDA, JAWS, VoiceOver)
 - **FR-030**: System MUST preserve paragraph breaks and document structure in text export
+- **FR-031**: System MUST handle password-protected or encrypted PDFs by displaying clear error message and skipping the file in batch processing
+- **FR-032**: System MUST continue batch processing when individual documents fail, flagging failed documents with specific error details while processing remaining documents
+- **FR-033**: System MUST handle mixed page orientations (portrait and landscape) within a single document, detecting and preserving each page's orientation
+- **FR-034**: System MUST provide pause/resume functionality for processing large documents (>200 pages), allowing user to interrupt and resume without reprocessing completed pages
+- **FR-035**: System MUST save manual boundary adjustments in application memory and provide option to save adjustment data alongside exported PDF for future sessions
+- **FR-036**: System MUST implement crash recovery for batch processing, saving queue state periodically and offering to resume incomplete batches on application restart
+- **FR-037**: System MUST handle preprocessing stage errors (PDF rendering failures) with specific error messages and continue to next page or document
+- **FR-038**: System MUST handle layout detection stage errors (no regions found, timeout) by flagging page for manual review and providing user override option
+- **FR-039**: System MUST handle OCR stage errors (engine failure, timeout, language unavailable) by allowing user to skip OCR for affected pages or retry with different settings
+- **FR-040**: System MUST handle export stage errors (disk full, permission denied, file locked) by displaying actionable error message and preserving processing state for retry
+- **FR-041**: System MUST clarify that pages with confidence scores between 80-85% are included in automatic export but highlighted in review interface as "borderline confidence"
+- **FR-042**: System MUST handle non-PDF file selection by displaying format error message and only accepting .pdf file extensions in file picker
 
 ### Key Entities *(include if feature involves data)*
 
@@ -186,6 +202,9 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **SC-013**: Screen readers can successfully navigate and read exported searchable PDFs with proper text flow
 - **SC-014**: OCR processing adds no more than 2 seconds per page to total export time
 - **SC-015**: Users can export a 20-page document to searchable PDF + text file in under 60 seconds
+- **SC-016**: Batch processing correctly handles at least 1 document failure out of 20 without stopping the entire batch
+- **SC-017**: Users can pause processing on page 250 of a 500-page document and resume within 5 seconds without reprocessing completed pages
+- **SC-018**: Manual boundary adjustments are preserved in memory during session and optionally saved for future sessions
 
 ## Assumptions *(optional)*
 
