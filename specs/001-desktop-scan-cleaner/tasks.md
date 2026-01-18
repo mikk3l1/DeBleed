@@ -108,15 +108,18 @@
 - [ ] T043 [US1] Create src/debleed/core/pipeline.py with process_document() function
 - [ ] T044 [US1] Implement page-by-page processing loop (iterate through document.pages)
 - [ ] T045 [US1] Wire preprocessing → layout detection per page
-- [ ] T046 [US1] Add confidence flagging (score < 0.80 → adjustment_status = FLAGGED)
+- [ ] T046 [US1] Add confidence flagging (score < 0.80 → adjustment_status = FLAGGED; 0.80-0.85 → is_borderline_confidence = True per FR-041)
 - [ ] T047 [US1] Implement incremental memory management (release page N-1 after processing N per FR-055)
 - [ ] T048 [US1] Add progress tracking (update processing_status states)
-- [ ] T049 [US1] Add timeout enforcement (10s file load, 5s layout per page per FR-047)
+- [ ] T049 [US1] Add timeout enforcement wrapper for pipeline stages (10s file load, 5s layout timeout, integrate with per-stage error handling per FR-047)
+- [ ] T049a [US1] Implement timeout mechanism using threading.Timer or asyncio.timeout for interruptible operations
+- [ ] T049b [US1] Add timeout exception handling that converts to user-facing error messages (FR-037 to FR-040)
 
 ### Export Stage (US1 - Produces Cleaned PDF)
 
 - [ ] T050 [P] [US1] Create src/debleed/core/export.py with ExportInput/Output dataclasses
-- [ ] T051 [US1] Implement export_document() function for PDF-only export
+- [ ] T050a [US1] Add disk space validation function (check available space >= 2x estimated output size per FR-051)
+- [ ] T051 [US1] Implement export_document() function for PDF-only export (call T050a before starting export)
 - [ ] T052 [US1] Add PDF page creation with PyMuPDF: crop to primary_region coordinates
 - [ ] T053 [US1] Implement filename generation (source + "_cleaned" suffix in same directory per FR-015, Clarifications)
 - [ ] T054 [US1] Add JPEG compression with configurable quality (default 85 per ExportConfig)
@@ -165,8 +168,8 @@
 - [ ] T078 [US5] Implement multi-column detection heuristic (gap-based clustering)
 - [ ] T079 [US5] Add language support (English required, Spanish/French/German bundled per FR-054)
 - [ ] T080 [US5] Add error handling for TESSERACT_NOT_FOUND, LANGUAGE_NOT_AVAILABLE, INVALID_IMAGE, TIMEOUT per FR-039
-- [ ] T081 [US5] Add timeout enforcement (10s per page per FR-047, SC-021)
-- [ ] T082 [US5] Add non-text element handling (skip images/diagrams per FR-053)
+- [ ] T081 [US5] Add timeout enforcement wrapper for OCR execution (10s hard timeout per page per FR-047, SC-021, with 2s performance target)
+- [ ] T082 [US5] Add non-text element handling (preserve images/diagrams in PDF output, skip OCR for image-only regions, log skipped regions without errors per FR-053)
 
 ### OCR Runtime Detection (US5)
 
@@ -188,7 +191,7 @@
 ### Pipeline Integration for OCR (US5)
 
 - [ ] T094 [US5] Enhance pipeline.process_document() to optionally run OCR after layout detection
-- [ ] T095 [US5] Add OCR-only-on-confident-pages logic (skip OCR if confidence < 0.80 per Constitution §Principle III)
+- [ ] T095 [US5] Add OCR warning for low-confidence pages (run OCR on all pages with detected primary regions, but surface warnings for pages with confidence < 0.80 per FR-012, FR-026)
 - [ ] T096 [US5] Add partial OCR failure handling (18/20 pages succeed per FR-052)
 - [ ] T097 [US5] Update progress tracking to include OCR stage
 
@@ -250,7 +253,7 @@
 - [ ] T119 [US4] Add thumbnail caching (200x200 px size per PerformanceConfig)
 - [ ] T120 [US4] Display detected boundary overlay on thumbnails (colored border)
 - [ ] T121 [US4] Add visual flagging for low-confidence pages (red border or icon per FR-013)
-- [ ] T122 [US4] Add visual flagging for borderline-confidence pages (80-85%, yellow border per FR-041)
+- [ ] T122 [US4] Add visual flagging for borderline-confidence pages (check Page.is_borderline_confidence, yellow border per FR-041)
 
 ### Page Navigation (US4)
 
@@ -331,10 +334,10 @@
 
 ### Error Handling & User Feedback
 
-- [ ] T160 [P] Improve all error messages to be user-friendly with actionable recovery steps (FR-019, FR-062)
+- [ ] T160 [P] Improve all error messages to be user-friendly with actionable recovery steps (FR-019)
 - [ ] T161 [P] Add detailed logging throughout pipeline (use Python logging module)
 - [ ] T162 Add operation cancellation support (cancel export mid-process per FR-045, SC-019)
-- [ ] T163 Implement partial export functionality (export 100/500 completed pages per FR-056, SC-022)
+- [ ] T163 Implement partial export functionality with UI feedback (export 100/500 completed pages, display dialog showing partial status, indicate in output filename per FR-056, SC-022)
 
 ### Performance Optimization
 

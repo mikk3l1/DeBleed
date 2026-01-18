@@ -147,7 +147,7 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-016**: System MUST provide keyboard shortcuts for efficient page navigation and review
 - **FR-017**: System MUST filter/view pages by status (all, flagged for review, adjusted manually)
 - **FR-018**: System MUST process multi-page documents incrementally without loading entire document into memory
-- **FR-019**: System MUST provide clear error messages when files cannot be opened or processed; auto-correct standard rotations (90°, 180°, 270°) and flag unusual angles for manual review
+- **FR-019**: System MUST provide clear, user-friendly error messages with actionable recovery steps when files cannot be opened or processed; auto-correct standard rotations (90°, 180°, 270°) and flag unusual angles for manual review
 - **FR-020**: System MUST support common page orientations (portrait, landscape) and detect rotation when present
 - **FR-021**: System MUST perform OCR text extraction on cleaned page regions
 - **FR-022**: System MUST generate searchable PDFs with embedded text layer preserving reading order
@@ -175,7 +175,7 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-044**: System MUST include flagged pages (confidence <80%) in exported PDF reading order at their original position, with visible warning annotations in the exported document
 - **FR-045**: System MUST allow users to cancel export operations mid-process, cleaning up partial files and returning to preview state without data loss
 - **FR-046**: System MUST detect OCR engine initialization failures at application startup and display clear error with installation/configuration instructions, disabling OCR-dependent features
-- **FR-047**: System MUST implement operation timeouts: 10 seconds for file loading, 5 seconds per page for layout detection, 10 seconds per page for OCR, with user notification on timeout
+- **FR-047**: System MUST implement operation timeouts: 10 seconds for file loading, 5 seconds per page for layout detection (with 500ms performance target), 10 seconds per page for OCR (with 2s performance target), with user notification on timeout
 - **FR-048**: System MUST warn users when exiting application during active processing (batch jobs, exports), offering to cancel operations or continue in background with state save
 - **FR-049**: System MUST prompt users to save or discard manual boundary adjustments when closing document or exiting application with unsaved changes
 - **FR-050**: System MUST detect and reject individual pages that exceed memory limits (>100MB per page after rendering), displaying specific error and offering lower-DPI re-rendering option

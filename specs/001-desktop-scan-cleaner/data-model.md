@@ -43,6 +43,7 @@
 - `detected_boundary: DetectedBoundary | None` - Identified primary page region (None if not yet detected)
 - `confidence_score: float` - Overall confidence in boundary detection (0.0-1.0)
 - `adjustment_status: AdjustmentStatus` - AUTO, MANUAL, FLAGGED
+- `is_borderline_confidence: bool` - True if confidence is 0.80-0.85 (per FR-041)
 - `preview_thumbnail: ndarray | None` - Smaller version for grid view (lazy-loaded)
 - `ocr_result: OCRResult | None` - Extracted text (None if OCR not yet performed)
 - `rotation_angle: int` - Detected rotation in degrees (0, 90, 180, 270)
@@ -51,6 +52,7 @@
 - `page_number` must be >= 1
 - `confidence_score` must be in range [0.0, 1.0]
 - If `confidence_score < 0.80`, `adjustment_status` should be FLAGGED
+- If `0.80 <= confidence_score <= 0.85`, `is_borderline_confidence` should be True
 - `rotation_angle` must be in {0, 90, 180, 270} for auto-corrected; other angles flag for review
 
 **Derived Properties**:

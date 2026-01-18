@@ -25,10 +25,10 @@ Build a desktop application that enables educators and students to convert imper
 **Target Platform**: Desktop (Windows 10+, macOS 11+, Linux with GUI) - packaged as standalone executable  
 **Project Type**: Single desktop application with GUI + core processing library  
 **Performance Goals**: 
-- Page detection: <500ms per page
-- OCR processing: <2 seconds per page
-- Memory: <500MB regardless of document size (incremental processing)
-- Load time: <5 seconds for 100-page document
+- Page detection: <500ms per page (performance target), 5s timeout per FR-047
+- OCR processing: <2 seconds per page (performance target), 10s timeout per FR-047
+- Memory: <500MB total application RSS memory regardless of document size (incremental processing)
+- Load time: <5 seconds for 100-page document, 10s timeout per FR-047
 
 **Constraints**: 
 - Deterministic processing (same input → same output)
