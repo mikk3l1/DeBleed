@@ -11,8 +11,8 @@
 
 ### Session 2026-01-17
 
-- Q: What confidence threshold should trigger flagging pages for manual review? → A: 80% confidence threshold (balanced - moderate flagging, good safety margin)
-- Q: What OCR confidence threshold should trigger flagging uncertain words with [?] markers? → A: 75% confidence threshold (balanced - catches uncertain text without over-flagging)
+- Q: What confidence threshold should trigger flagging pages for manual review? → A: 80% confidence threshold (balanced - moderate flagging, good safety margin) - Referenced by FR-012, FR-043
+- Q: What OCR confidence threshold should trigger flagging uncertain words with [?] markers? → A: 75% confidence threshold (balanced - catches uncertain text without over-flagging) - Referenced by FR-026
 - Q: Where should cleaned PDFs be saved by default? → A: Same directory as source file with "_cleaned" suffix
 - Q: Should rotation correction happen automatically or require user approval? → A: Auto-correct common angles (90°, 180°, 270°), flag unusual angles for review
 - Q: How should multi-column reading order be detected? → A: Left-to-right columns with language-aware detection for future RTL support
@@ -171,6 +171,20 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **FR-040**: System MUST handle export stage errors (disk full, permission denied, file locked) by displaying actionable error message and preserving processing state for retry
 - **FR-041**: System MUST clarify that pages with confidence scores between 80-85% are included in automatic export but highlighted in review interface as "borderline confidence"
 - **FR-042**: System MUST handle non-PDF file selection by displaying format error message and only accepting .pdf file extensions in file picker
+- **FR-043**: System MUST explicitly reference the 80% page detection confidence threshold from Clarifications in low-confidence flagging behavior (linking FR-012 to documented threshold)
+- **FR-044**: System MUST include flagged pages (confidence <80%) in exported PDF reading order at their original position, with visible warning annotations in the exported document
+- **FR-045**: System MUST allow users to cancel export operations mid-process, cleaning up partial files and returning to preview state without data loss
+- **FR-046**: System MUST detect OCR engine initialization failures at application startup and display clear error with installation/configuration instructions, disabling OCR-dependent features
+- **FR-047**: System MUST implement operation timeouts: 10 seconds for file loading, 5 seconds per page for layout detection, 10 seconds per page for OCR, with user notification on timeout
+- **FR-048**: System MUST warn users when exiting application during active processing (batch jobs, exports), offering to cancel operations or continue in background with state save
+- **FR-049**: System MUST prompt users to save or discard manual boundary adjustments when closing document or exiting application with unsaved changes
+- **FR-050**: System MUST detect and reject individual pages that exceed memory limits (>100MB per page after rendering), displaying specific error and offering lower-DPI re-rendering option
+- **FR-051**: System MUST monitor available disk space before export operations and display error with required space estimate when insufficient space detected (<2x estimated output size)
+- **FR-052**: System MUST handle partial OCR failures (e.g., 18/20 pages succeed) by exporting successful pages and flagging failed pages with specific error details, giving user option to retry failed pages or export partial results
+- **FR-053**: System MUST define "gracefully handle non-text elements" (FR-027) as: preserve images/diagrams in PDF output, skip OCR for image-only regions, log skipped regions without errors
+- **FR-054**: System MUST support OCR for English (required), Spanish, French, German (bundled), with user option to select language and clear indication of which language packs are available
+- **FR-055**: System MUST implement incremental memory management for multi-page processing: release page N-1 image data from memory after processing page N, maintaining only current page + thumbnails in memory
+- **FR-056**: System MUST allow exporting partially processed documents (e.g., 100/500 pages complete) when user cancels or pauses, creating output from completed pages only with clear indication of partial status
 
 ### Key Entities *(include if feature involves data)*
 
@@ -205,6 +219,10 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **SC-016**: Batch processing correctly handles at least 1 document failure out of 20 without stopping the entire batch
 - **SC-017**: Users can pause processing on page 250 of a 500-page document and resume within 5 seconds without reprocessing completed pages
 - **SC-018**: Manual boundary adjustments are preserved in memory during session and optionally saved for future sessions
+- **SC-019**: Users can cancel a 20-page export operation at page 12 and return to preview state within 2 seconds without partial files remaining
+- **SC-020**: OCR engine initialization failures are detected within 3 seconds of application startup with actionable error message
+- **SC-021**: Page processing operations timeout correctly (layout: 5s, OCR: 10s) preventing infinite hangs on problematic pages
+- **SC-022**: Users exporting a 500-page document with only 200 pages processed can export partial results with clear "200/500 pages" indication in filename
 
 ## Assumptions *(optional)*
 
@@ -229,7 +247,7 @@ A student with visual impairment receives scanned class notes and needs to conve
 - **Performance Baseline**: Page detection and preview generation must complete in under 500ms per page; OCR processing should add no more than 2 seconds per page
 - **Memory Constraints**: Must process documents page-by-page to support large documents on systems with limited RAM (4GB minimum)
 - **Accessibility Standards**: Exported searchable PDFs must comply with PDF/UA (Universal Accessibility) standards where feasible
-- **Language Support**: Initial release supports English OCR; additional languages can be added in future releases
+- **Language Support**: Initial release supports English (required), Spanish, French, German (bundled as default); additional languages can be added via user-installable language packs in future releases (addressed by FR-054)
 
 ## Dependencies *(optional)*
 
