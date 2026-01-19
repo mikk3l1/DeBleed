@@ -156,49 +156,49 @@
 
 ### Pipeline Stage 3: OCR Integration (US5)
 
-- [ ] T071 [P] [US5] Create src/debleed/core/ocr_integration.py with OCRInput/Output dataclasses
-- [ ] T072 [US5] Implement extract_text() function: cropped image → OCROutput
-- [ ] T073 [US5] Add Tesseract execution via pytesseract with fixed PSM mode (3) and OEM mode (3)
-- [ ] T074 [US5] Implement word-level confidence extraction from Tesseract output
-- [ ] T075 [US5] Add low-confidence word flagging (confidence < 0.75 per FR-026, Clarifications)
-- [ ] T076 [US5] Implement text block segmentation from Tesseract block-level data
-- [ ] T077 [US5] Add reading order determination (left-to-right columns per Clarifications)
+- [X] T071 [P] [US5] Create src/debleed/core/ocr_integration.py with OCRInput/Output dataclasses
+- [X] T072 [US5] Implement extract_text() function: cropped image → OCROutput
+- [X] T073 [US5] Add Tesseract execution via pytesseract with fixed PSM mode (3) and OEM mode (3)
+- [X] T074 [US5] Implement word-level confidence extraction from Tesseract output
+- [X] T075 [US5] Add low-confidence word flagging (confidence < 0.75 per FR-026, Clarifications)
+- [X] T076 [US5] Implement text block segmentation from Tesseract block-level data
+- [X] T077 [US5] Add reading order determination (left-to-right columns per Clarifications)
 - [ ] T078 [US5] Implement multi-column detection heuristic (gap-based clustering)
-- [ ] T079 [US5] Add language support (English required, Spanish/French/German bundled per FR-054)
-- [ ] T080 [US5] Add error handling for TESSERACT_NOT_FOUND, LANGUAGE_NOT_AVAILABLE, INVALID_IMAGE, TIMEOUT per FR-039
-- [ ] T081 [US5] Add timeout enforcement wrapper for OCR execution (10s hard timeout per page per FR-047, SC-021, with 2s performance target)
+- [X] T079 [US5] Add language support (English required, Spanish/French/German bundled per FR-054)
+- [X] T080 [US5] Add error handling for TESSERACT_NOT_FOUND, LANGUAGE_NOT_AVAILABLE, INVALID_IMAGE, TIMEOUT per FR-039
+- [X] T081 [US5] Add timeout enforcement wrapper for OCR execution (10s hard timeout per page per FR-047, SC-021, with 2s performance target)
 - [ ] T082 [US5] Add non-text element handling (preserve images/diagrams in PDF output, skip OCR for image-only regions, log skipped regions without errors per FR-053)
 
 ### OCR Runtime Detection (US5)
 
-- [ ] T083 [US5] Add get_tesseract_path() function for bundled vs system Tesseract detection
+- [X] T083 [US5] Add get_tesseract_path() function for bundled vs system Tesseract detection
 - [ ] T084 [US5] Implement Tesseract initialization check at startup (integrate with T068)
-- [ ] T085 [US5] Add language pack verification (check eng.traineddata, spa, fra, deu availability)
+- [X] T085 [US5] Add language pack verification (check eng.traineddata, spa, fra, deu availability)
 
 ### Export Enhancement for OCR (US5)
 
-- [ ] T086 [US5] Enhance export_document() to support SEARCHABLE_PDF format (extends T051)
-- [ ] T087 [US5] Implement invisible text layer embedding in PDF using PyMuPDF insert_text()
-- [ ] T088 [US5] Add font size calculation for text blocks (match visual text size)
-- [ ] T089 [US5] Implement PDF_AND_TEXT format (PDF + .txt file)
-- [ ] T090 [US5] Implement TEXT_ONLY format (plain text export)
-- [ ] T091 [US5] Add page separator formatting for multi-page text ("--- Page N ---" per contracts/export.md)
-- [ ] T092 [US5] Add [?] marker insertion for flagged words in text output (FR-026, data-model §OCRResult.plain_text)
-- [ ] T093 [US5] Add paragraph break preservation in text export (FR-030)
+- [X] T086 [US5] Enhance export_document() to support SEARCHABLE_PDF format (extends T051)
+- [X] T087 [US5] Implement invisible text layer embedding in PDF using PyMuPDF insert_text()
+- [X] T088 [US5] Add font size calculation for text blocks (match visual text size)
+- [X] T089 [US5] Implement PDF_AND_TEXT format (PDF + .txt file)
+- [X] T090 [US5] Implement TEXT_ONLY format (plain text export)
+- [X] T091 [US5] Add page separator formatting for multi-page text ("--- Page N ---" per contracts/export.md)
+- [X] T092 [US5] Add [?] marker insertion for flagged words in text output (FR-026, data-model §OCRResult.plain_text)
+- [X] T093 [US5] Add paragraph break preservation in text export (FR-030)
 
 ### Pipeline Integration for OCR (US5)
 
-- [ ] T094 [US5] Enhance pipeline.process_document() to optionally run OCR after layout detection
-- [ ] T095 [US5] Add OCR warning for low-confidence pages (run OCR on all pages with detected primary regions, but surface warnings for pages with confidence < 0.80 per FR-012, FR-026)
-- [ ] T096 [US5] Add partial OCR failure handling (18/20 pages succeed per FR-052)
-- [ ] T097 [US5] Update progress tracking to include OCR stage
+- [X] T094 [US5] Enhance pipeline.process_document() to optionally run OCR after layout detection
+- [X] T095 [US5] Add OCR warning for low-confidence pages (run OCR on all pages with detected primary regions, but surface warnings for pages with confidence < 0.80 per FR-012, FR-026)
+- [X] T096 [US5] Add partial OCR failure handling (18/20 pages succeed per FR-052)
+- [X] T097 [US5] Update progress tracking to include OCR stage
 
 ### UI Enhancement for OCR (US5)
 
-- [ ] T098 [US5] Add export format selection dropdown (Searchable PDF, PDF + Text, Text Only) to MainWindow
-- [ ] T099 [US5] Add OCR status indication in page list (show OCR confidence if performed)
-- [ ] T100 [US5] Add warning display for pages with low OCR confidence (<75%)
-- [ ] T101 [US5] Update progress bar to show OCR processing stage
+- [X] T098 [US5] Add export format selection dropdown (Searchable PDF, PDF + Text, Text Only) to MainWindow
+- [X] T099 [US5] Add OCR status indication in page list (show OCR confidence if performed)
+- [X] T100 [US5] Add warning display for pages with low OCR confidence (<75%)
+- [X] T101 [US5] Update progress bar to show OCR processing stage
 
 **Checkpoint**: ✅ Accessibility Complete - Searchable PDFs with text layer, screen reader compatible
 

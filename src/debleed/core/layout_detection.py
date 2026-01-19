@@ -98,8 +98,16 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
             input_data.config.canny_threshold_high,
         )
         
-        # Find contours
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Apply morphological closing to connect nearby edges (merge text into larger regions)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+        edges_closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+        
+        # Dilate to further merge regions
+        kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10))
+        edges_dilated = cv2.dilate(edges_closed, kernel_dilate, iterations=2)
+        
+        # Find contours on processed edges
+        contours, _ = cv2.findContours(edges_dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if not contours:
             raise LayoutDetectionError(
@@ -115,9 +123,14 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
             # Get bounding rectangle
             x, y, w, h = cv2.boundingRect(contour)
             
-            # Skip tiny regions (< 5% of image)
+            # Skip tiny regions (< 10% of image area for better filtering)
             region_area = w * h
-            if region_area < 0.05 * image_area:
+            if region_area < 0.10 * image_area:
+                continue
+            
+            # Skip regions that are too narrow or short (likely artifacts)
+            aspect_ratio = max(w, h) / min(w, h) if min(w, h) > 0 else 0
+            if aspect_ratio > 5:  # Skip very elongated regions
                 continue
             
             # Calculate area percentage (0.0-100.0 for storage, 0.0-1.0 for confidence calc)
@@ -161,25 +174,104 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
         # Sort by confidence (descending)
         regions.sort(key=lambda r: r["confidence"], reverse=True)
         
-        # Primary region (highest confidence)
-        primary = regions[0]
-        primary_region = PrimaryPageRegion(
-            coordinates=(primary["x"], primary["y"], primary["w"], primary["h"]),
-            confidence_level=primary["confidence"],
-            area_percentage=primary["area_percentage"],
-            detection_method="canny_edge",
-        )
-        
-        # Secondary regions (remaining regions with confidence > 0.3)
-        secondary_regions = [
-            PrimaryPageRegion(
-                coordinates=(r["x"], r["y"], r["w"], r["h"]),
-                confidence_level=r["confidence"],
-                area_percentage=r["area_percentage"],
-                detection_method="canny_edge",
-            )
-            for r in regions[1:] if r["confidence"] > 0.3
-        ]
+        # Check for two-page spreads: if we have 2 regions with similar size side-by-side
+        # and combined they cover > 70% of page, it's likely a spread
+        if len(regions) >= 2:
+            first = regions[0]
+            second = regions[1]
+            
+            # Check if regions are side-by-side (not overlapping vertically too much)
+            vertical_overlap = min(first["y"] + first["h"], second["y"] + second["h"]) - max(first["y"], second["y"])
+            vertical_union = max(first["y"] + first["h"], second["y"] + second["h"]) - min(first["y"], second["y"])
+            vertical_overlap_ratio = vertical_overlap / vertical_union if vertical_union > 0 else 0
+            
+            # Check if similar size (within 30% of each other)
+            size_ratio = min(first["area_percentage"], second["area_percentage"]) / max(first["area_percentage"], second["area_percentage"])
+            
+            # Check if horizontally separated
+            horizontal_gap = abs((first["x"] + first["w"]/2) - (second["x"] + second["w"]/2))
+            min_width = min(first["w"], second["w"])
+            
+            # Combined coverage
+            combined_coverage = first["area_percentage"] + second["area_percentage"]
+            
+            # If this looks like a two-page spread
+            if (vertical_overlap_ratio > 0.7 and  # Aligned vertically
+                size_ratio > 0.7 and              # Similar sizes
+                horizontal_gap > min_width * 0.8 and  # Horizontally separated
+                combined_coverage > 70.0):        # Together they cover most of page
+                
+                # Pick the right page (assuming right-to-left reading for book spreads)
+                # Sort by x coordinate to get left and right pages
+                if first["x"] < second["x"]:
+                    left_page = first
+                    right_page = second
+                else:
+                    left_page = second
+                    right_page = first
+                
+                # Use the right page (main content page in most books)
+                selected_page = right_page
+                
+                primary_region = PrimaryPageRegion(
+                    coordinates=(selected_page["x"], selected_page["y"], selected_page["w"], selected_page["h"]),
+                    confidence_level=selected_page["confidence"] + 0.2,  # Boost confidence for spread detection
+                    area_percentage=selected_page["area_percentage"],
+                    detection_method="two_page_spread_right",
+                )
+                
+                secondary_regions = []  # No secondary regions for spread detection
+                
+        # If not a two-page spread, use normal logic
+        if 'primary_region' not in locals():
+            # Check if this is a clean scan without bleed marks
+            # If the best region covers < 50% of page, assume it's a clean scan
+            # and use the entire page with a margin
+            best_region = regions[0]
+            if best_region["area_percentage"] < 50.0:
+                # Clean scan - use entire page with small margin (2% on each side)
+                margin_x = int(width * 0.02)
+                margin_y = int(height * 0.02)
+                
+                fallback_x = margin_x
+                fallback_y = margin_y
+                fallback_w = width - (2 * margin_x)
+                fallback_h = height - (2 * margin_y)
+                fallback_area = fallback_w * fallback_h
+                fallback_area_percentage = (fallback_area / image_area) * 100.0
+                
+                # High confidence for fallback (0.95 - clearly a clean scan)
+                fallback_confidence = 0.95
+                
+                primary_region = PrimaryPageRegion(
+                    coordinates=(fallback_x, fallback_y, fallback_w, fallback_h),
+                    confidence_level=fallback_confidence,
+                    area_percentage=fallback_area_percentage,
+                    detection_method="fallback_full_page",
+                )
+                
+                # No secondary regions for clean scans
+                secondary_regions = []
+            else:
+                # Bleed marks detected - use the detected region
+                primary = best_region
+                primary_region = PrimaryPageRegion(
+                    coordinates=(primary["x"], primary["y"], primary["w"], primary["h"]),
+                    confidence_level=primary["confidence"],
+                    area_percentage=primary["area_percentage"],
+                    detection_method="canny_edge",
+                )
+                
+                # Secondary regions (remaining regions with confidence > 0.3)
+                secondary_regions = [
+                    PrimaryPageRegion(
+                        coordinates=(r["x"], r["y"], r["w"], r["h"]),
+                        confidence_level=r["confidence"],
+                        area_percentage=r["area_percentage"],
+                        detection_method="canny_edge",
+                    )
+                    for r in regions[1:] if r["confidence"] > 0.3
+                ]
         
         # Create detected boundary
         detected_boundary = DetectedBoundary(

@@ -6,7 +6,10 @@ from typing import Optional
 
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
     QFileDialog,
+    QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
@@ -18,12 +21,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from debleed.config.export_config import ExportConfig
 from debleed.core.document_loader import load_document
 from debleed.core.exceptions import DeBleedError, ExportError, LayoutDetectionError, PreprocessingError
 from debleed.core.export import ExportInput, export_document
 from debleed.core.pipeline import ProcessingProgress, process_document
 from debleed.models.document import ScannedDocument
-from debleed.models.enums import AdjustmentStatus
+from debleed.models.enums import AdjustmentStatus, ExportFormat
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +82,38 @@ class MainWindow(QMainWindow):
         self.open_button = QPushButton("Open PDF")
         self.open_button.setMinimumHeight(40)
         layout.addWidget(self.open_button)
+        
+        # OCR enable checkbox
+        ocr_layout = QHBoxLayout()
+        self.ocr_checkbox = QCheckBox("Enable OCR (text extraction)")
+        self.ocr_checkbox.setToolTip(
+            "Extract text from pages using Tesseract OCR. "
+            "Enables searchable PDF export but increases processing time."
+        )
+        self.ocr_checkbox.setChecked(False)  # Default: disabled for speed
+        ocr_layout.addWidget(self.ocr_checkbox)
+        ocr_layout.addStretch()
+        layout.addLayout(ocr_layout)
+        
+        # Export format selector
+        format_layout = QHBoxLayout()
+        format_label = QLabel("Export format:")
+        format_layout.addWidget(format_label)
+        
+        self.export_format_combo = QComboBox()
+        self.export_format_combo.addItem("Searchable PDF", ExportFormat.SEARCHABLE_PDF)
+        self.export_format_combo.addItem("PDF + Text File", ExportFormat.PDF_AND_TEXT)
+        self.export_format_combo.addItem("Text Only", ExportFormat.TEXT_ONLY)
+        self.export_format_combo.setToolTip(
+            "Choose output format:\n"
+            "• Searchable PDF: PDF with invisible text layer (requires OCR)\n"
+            "• PDF + Text: Searchable PDF plus separate .txt file (requires OCR)\n"
+            "• Text Only: Only .txt file output (requires OCR)"
+        )
+        self.export_format_combo.setCurrentIndex(0)  # Default: SEARCHABLE_PDF
+        format_layout.addWidget(self.export_format_combo)
+        format_layout.addStretch()
+        layout.addLayout(format_layout)
         
         # Page list
         list_label = QLabel("Pages:")
@@ -144,11 +180,18 @@ class MainWindow(QMainWindow):
             logger.info(f"Loading document: {file_path}")
             self.document = load_document(file_path)
             
+            # Get OCR enable state
+            enable_ocr = self.ocr_checkbox.isChecked()
+            
             # Process document through pipeline
-            logger.info(f"Processing {self.document.page_count} pages...")
+            logger.info(
+                f"Processing {self.document.page_count} pages "
+                f"(OCR: {'enabled' if enable_ocr else 'disabled'})..."
+            )
             self.document = process_document(
                 self.document,
                 progress_callback=self._on_progress_update,
+                enable_ocr=enable_ocr,
             )
             
             # Processing complete
@@ -188,10 +231,10 @@ class MainWindow(QMainWindow):
         # Populate page list
         self.page_list.clear()
         for page in self.document.pages:
-            # Format: "Page 1 - Confidence: 0.92 ✓"
+            # Format: "Page 1 - Confidence: 0.92 ✓ - OCR: 0.88 ✓"
             confidence_str = f"{page.confidence_score:.2f}"
             
-            # Status indicator
+            # Status indicator for layout detection
             if page.adjustment_status == AdjustmentStatus.FLAGGED:
                 status_icon = "⚠️"  # Flagged for review
                 status_text = "NEEDS REVIEW"
@@ -203,6 +246,24 @@ class MainWindow(QMainWindow):
                 status_text = "OK"
             
             item_text = f"Page {page.page_number} - Confidence: {confidence_str} - {status_text} {status_icon}"
+            
+            # Add OCR confidence if available
+            if page.ocr_result is not None:
+                ocr_conf = page.ocr_result.overall_confidence
+                ocr_conf_str = f"{ocr_conf:.2f}"
+                
+                # OCR status indicator
+                if ocr_conf < 0.75:
+                    ocr_status = "⚠️ Low"
+                    ocr_color = Qt.GlobalColor.red
+                elif ocr_conf < 0.85:
+                    ocr_status = "⚠ Fair"
+                    ocr_color = Qt.GlobalColor.darkYellow
+                else:
+                    ocr_status = "✓ Good"
+                    ocr_color = Qt.GlobalColor.darkGreen
+                
+                item_text += f" - OCR: {ocr_conf_str} {ocr_status}"
             
             item = QListWidgetItem(item_text)
             
@@ -240,14 +301,30 @@ class MainWindow(QMainWindow):
         if self.document is None:
             return
         
+        # Get selected export format
+        export_format = self.export_format_combo.currentData()
+        
+        # Check if OCR is required but not available
+        if export_format in (ExportFormat.SEARCHABLE_PDF, ExportFormat.PDF_AND_TEXT, ExportFormat.TEXT_ONLY):
+            if all(page.ocr_result is None for page in self.document.pages):
+                self._show_error(
+                    "OCR Required",
+                    f"The selected export format requires OCR text extraction.\n\n"
+                    f"Please reload the document with 'Enable OCR' checked.",
+                )
+                return
+        
         try:
             # Update UI
             self.export_button.setEnabled(False)
             self.statusBar().showMessage("Exporting clean PDF...")
             
+            # Create export config with selected format
+            export_config = ExportConfig(output_format=export_format)
+            
             # Export document
-            logger.info(f"Exporting document: {self.document.file_path}")
-            export_input = ExportInput(document=self.document)
+            logger.info(f"Exporting document: {self.document.file_path} (format: {export_format.name})")
+            export_input = ExportInput(document=self.document, config=export_config)
             export_output = export_document(export_input)
             
             # Success

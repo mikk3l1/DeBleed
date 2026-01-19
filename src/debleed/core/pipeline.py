@@ -10,9 +10,10 @@ from typing import Callable, Optional
 from debleed.config.detection_config import DetectionConfig
 from debleed.config.performance_config import PerformanceConfig
 from debleed.core.document_loader import load_document
-from debleed.core.exceptions import DeBleedError, LayoutDetectionError, PreprocessingError
+from debleed.core.exceptions import DeBleedError, LayoutDetectionError, PreprocessingError, OCRError
 from debleed.core.layout_detection import LayoutDetectionInput, detect_layout
 from debleed.core.preprocessing import PreprocessingInput, preprocess_page
+from debleed.core.ocr_integration import OCRInput, extract_text
 from debleed.models.document import ScannedDocument
 from debleed.models.enums import AdjustmentStatus, ProcessingStatus
 from debleed.models.page import Page
@@ -98,8 +99,9 @@ def process_document(
     detection_config: Optional[DetectionConfig] = None,
     performance_config: Optional[PerformanceConfig] = None,
     progress_callback: Optional[Callable[[ProcessingProgress], None]] = None,
+    enable_ocr: bool = False,
 ) -> ScannedDocument:
-    """Process document through full pipeline (preprocessing → layout detection).
+    """Process document through full pipeline (preprocessing → layout detection → optional OCR).
     
     Pipeline workflow:
     1. Load document (LOADED → ANALYZING state transition)
@@ -108,8 +110,9 @@ def process_document(
         b. Detect layout: image → DetectedBoundary
         c. Calculate confidence score
         d. Flag low confidence pages (< 0.80) and borderline pages (0.80-0.85)
-        e. Create Page object
-        f. Release previous page memory (incremental cleanup)
+        e. Optionally extract text with OCR (if enable_ocr=True)
+        f. Create Page object
+        g. Release previous page memory (incremental cleanup)
     3. Update document state (ANALYZING → READY)
     4. Report progress via callback
     
@@ -118,6 +121,7 @@ def process_document(
         detection_config: Layout detection configuration (defaults to DetectionConfig())
         performance_config: Performance/timeout configuration (defaults to PerformanceConfig())
         progress_callback: Optional callback for progress updates
+        enable_ocr: Whether to perform OCR text extraction (default: False)
         
     Returns:
         Updated ScannedDocument with processed pages
@@ -200,6 +204,58 @@ def process_document(
                 detection_config.borderline_confidence_threshold
             )
             
+            # Stage 3: Optional OCR text extraction
+            ocr_result = None
+            if enable_ocr:
+                try:
+                    # Update progress for OCR stage
+                    if progress_callback:
+                        progress = ProcessingProgress(
+                            total_pages=document.page_count,
+                            completed_pages=len(processed_pages),
+                            current_page=page_num,
+                            status_message=f"Extracting text from page {page_num} of {document.page_count}",
+                        )
+                        progress_callback(progress)
+                    
+                    logger.debug(f"Performing OCR on page {page_num}")
+                    
+                    # Extract cropped region for OCR (use primary region)
+                    primary = layout_output.detected_boundary.primary_region
+                    primary_x, primary_y, primary_w, primary_h = primary.coordinates
+                    cropped_image = preprocessing_output.image_data[
+                        primary_y:primary_y + primary_h,
+                        primary_x:primary_x + primary_w
+                    ]
+                    
+                    # Perform OCR with timeout
+                    with timeout(performance_config.max_ocr_time_per_page, f"Page {page_num} OCR"):
+                        ocr_input = OCRInput(
+                            image_data=cropped_image,
+                            page_number=page_num,
+                            config=detection_config.ocr_config,
+                        )
+                        ocr_output = extract_text(ocr_input)
+                        ocr_result = ocr_output.ocr_result
+                    
+                    logger.info(
+                        f"OCR complete for page {page_num}: "
+                        f"{len(ocr_result.text_blocks)} blocks, "
+                        f"confidence {ocr_result.overall_confidence:.2f}"
+                    )
+                    
+                except OCRError as e:
+                    # OCR failure is non-critical - log warning and continue (FR-052)
+                    logger.warning(
+                        f"OCR failed for page {page_num}: {e.message} "
+                        f"(error code: {e.error_code}). Continuing without text extraction."
+                    )
+                    ocr_result = None
+                except Exception as e:
+                    # Unexpected OCR error - log but don't fail the entire pipeline
+                    logger.error(f"Unexpected OCR error on page {page_num}: {str(e)}")
+                    ocr_result = None
+            
             # Create Page object
             page = Page(
                 page_number=page_num,
@@ -209,7 +265,7 @@ def process_document(
                 confidence_score=confidence_score,
                 adjustment_status=adjustment_status,
                 is_borderline_confidence=is_borderline,
-                ocr_result=None,  # OCR not performed in MVP
+                ocr_result=ocr_result,
                 rotation_angle=layout_output.rotation_angle,
             )
             

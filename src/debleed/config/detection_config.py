@@ -1,6 +1,8 @@
 """Detection configuration for page boundary detection."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from debleed.config.ocr_config import OCRConfig
 
 
 @dataclass(frozen=True)
@@ -14,6 +16,7 @@ class DetectionConfig:
         canny_threshold_high: Upper threshold for Canny edge detection
         enable_rotation_detection: Whether to detect and auto-correct page rotation
         enable_debug_output: Whether to generate debug visualizations (edge maps, contours)
+        ocr_config: Configuration for OCR text extraction (if enabled)
     """
     
     page_confidence_threshold: float = 0.80
@@ -22,6 +25,7 @@ class DetectionConfig:
     canny_threshold_high: int = 150
     enable_rotation_detection: bool = True
     enable_debug_output: bool = False
+    ocr_config: OCRConfig = field(default_factory=OCRConfig)
     
     def __post_init__(self) -> None:
         """Validate detection configuration."""

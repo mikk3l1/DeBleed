@@ -14,7 +14,7 @@ from PIL import Image
 from debleed.config.export_config import ExportConfig
 from debleed.core.exceptions import ExportError
 from debleed.models.document import ScannedDocument
-from debleed.models.enums import ProcessingStatus
+from debleed.models.enums import ExportFormat, ProcessingStatus
 
 
 @dataclass
@@ -203,6 +203,40 @@ def export_document(input_data: ExportInput) -> ExportOutput:
                 stream=img_bytes,
             )
             img_doc.close()
+            
+            # Add invisible OCR text layer for searchable PDFs (FR-053)
+            if (
+                input_data.config.output_format in (ExportFormat.SEARCHABLE_PDF, ExportFormat.PDF_AND_TEXT) and
+                page.ocr_result is not None
+            ):
+                # Add text blocks as invisible text layer
+                for text_block in page.ocr_result.text_blocks:
+                    # Calculate font size to match block height
+                    block_x, block_y, block_w, block_h = text_block.position
+                    
+                    # Estimate font size (height in points, rough approximation)
+                    # Tesseract block height approximates text line count * line height
+                    # Use conservative estimate: block_h / estimated_lines
+                    estimated_lines = max(1, text_block.content.count('\n') + 1)
+                    font_size = max(8, block_h / estimated_lines * 0.7)
+                    
+                    # Insert text at block position with calculated font size
+                    # Text is rendered in white (invisible on white page)
+                    try:
+                        pdf_page.insert_text(
+                            point=(block_x, block_y + font_size),  # Baseline position
+                            text=text_block.content,
+                            fontsize=font_size,
+                            color=(1, 1, 1),  # White text (invisible)
+                            overlay=False,  # Place text below image
+                        )
+                    except Exception as e:
+                        # Text insertion failure is non-critical - log and continue
+                        import logging
+                        logging.warning(
+                            f"Failed to insert text block on page {page_num} "
+                            f"at position ({block_x}, {block_y}): {str(e)}"
+                        )
         
         # Save PDF
         try:
@@ -249,6 +283,53 @@ def export_document(input_data: ExportInput) -> ExportOutput:
         
         # Get file size
         file_size_bytes = output_path.stat().st_size
+        
+        # Generate text file if requested (FR-053)
+        if input_data.config.output_format in (ExportFormat.PDF_AND_TEXT, ExportFormat.TEXT_ONLY):
+            text_output_path = output_path.with_suffix('.txt')
+            try:
+                with text_output_path.open('w', encoding='utf-8') as text_file:
+                    for page_num in page_numbers:
+                        page = input_data.document.pages[page_num - 1]
+                        
+                        # Add page separator
+                        text_file.write(f"--- Page {page_num} ---\n\n")
+                        
+                        if page.ocr_result is not None:
+                            # Write OCR text with flagged word markers
+                            text_content = page.ocr_result.text_content
+                            
+                            # Insert [?] markers for low-confidence words
+                            for flagged_word in page.ocr_result.flagged_words:
+                                text_content = text_content.replace(
+                                    flagged_word,
+                                    f"{flagged_word}[?]",
+                                    1  # Replace only first occurrence
+                                )
+                            
+                            text_file.write(text_content)
+                            text_file.write("\n\n")
+                        else:
+                            text_file.write("(No OCR text available)\n\n")
+                
+                # Update file size to include text file if both formats
+                if input_data.config.output_format == ExportFormat.PDF_AND_TEXT:
+                    file_size_bytes += text_output_path.stat().st_size
+                
+            except Exception as e:
+                import logging
+                logging.warning(f"Failed to generate text file {text_output_path}: {str(e)}")
+        
+        # For TEXT_ONLY, remove the PDF (we generated it as intermediate)
+        if input_data.config.output_format == ExportFormat.TEXT_ONLY:
+            try:
+                output_path.unlink()
+                # Update output path to text file
+                output_path = text_output_path
+                file_size_bytes = output_path.stat().st_size
+            except Exception as e:
+                import logging
+                logging.warning(f"Failed to remove intermediate PDF {output_path}: {str(e)}")
         
         # Transition to COMPLETE
         input_data.document.update_status(ProcessingStatus.COMPLETE)

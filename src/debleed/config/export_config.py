@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from debleed.models.enums import ExportFormat
+
 
 @dataclass(frozen=True)
 class ExportConfig:
@@ -13,6 +15,7 @@ class ExportConfig:
         deterministic_generation: Whether to disable timestamps for reproducible PDFs
         preserve_metadata: Whether to copy metadata from source PDF to cleaned PDF
         default_output_directory: Directory for exports (None = same as source file)
+        output_format: Export format (SEARCHABLE_PDF, PDF_AND_TEXT, or TEXT_ONLY)
     """
     
     default_suffix: str = "_cleaned"
@@ -20,6 +23,7 @@ class ExportConfig:
     deterministic_generation: bool = True
     preserve_metadata: bool = False
     default_output_directory: str = None
+    output_format: ExportFormat = ExportFormat.SEARCHABLE_PDF
     
     def __post_init__(self) -> None:
         """Validate export configuration."""
