@@ -120,8 +120,9 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
             if region_area < 0.05 * image_area:
                 continue
             
-            # Calculate area percentage
-            area_percentage = region_area / image_area
+            # Calculate area percentage (0.0-100.0 for storage, 0.0-1.0 for confidence calc)
+            area_fraction = region_area / image_area
+            area_percentage = area_fraction * 100.0
             
             # Calculate rectangularity (how closely contour fits bounding box)
             contour_area = cv2.contourArea(contour)
@@ -131,9 +132,9 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
             roi_edges = edges[y:y+h, x:x+w]
             edge_strength = float(np.mean(roi_edges)) / 255.0
             
-            # Composite confidence score
+            # Composite confidence score (using area_fraction 0.0-1.0)
             confidence = (
-                0.5 * min(area_percentage, 1.0) +
+                0.5 * min(area_fraction, 1.0) +
                 0.3 * rectangularity +
                 0.2 * edge_strength
             )
@@ -163,10 +164,7 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
         # Primary region (highest confidence)
         primary = regions[0]
         primary_region = PrimaryPageRegion(
-            x=primary["x"],
-            y=primary["y"],
-            w=primary["w"],
-            h=primary["h"],
+            coordinates=(primary["x"], primary["y"], primary["w"], primary["h"]),
             confidence_level=primary["confidence"],
             area_percentage=primary["area_percentage"],
             detection_method="canny_edge",
@@ -175,10 +173,7 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
         # Secondary regions (remaining regions with confidence > 0.3)
         secondary_regions = [
             PrimaryPageRegion(
-                x=r["x"],
-                y=r["y"],
-                w=r["w"],
-                h=r["h"],
+                coordinates=(r["x"], r["y"], r["w"], r["h"]),
                 confidence_level=r["confidence"],
                 area_percentage=r["area_percentage"],
                 detection_method="canny_edge",
@@ -190,7 +185,7 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
         detected_boundary = DetectedBoundary(
             primary_region=primary_region,
             secondary_regions=secondary_regions,
-            detection_metadata={
+            detection_config={
                 "algorithm": "canny_edge",
                 "canny_low": input_data.config.canny_threshold_low,
                 "canny_high": input_data.config.canny_threshold_high,
@@ -210,18 +205,24 @@ def detect_layout(input_data: LayoutDetectionInput) -> LayoutDetectionOutput:
         if input_data.config.enable_debug_output:
             # Draw bounding boxes on original image
             debug_image = input_data.image_data.copy()
+            
+            # Unpack primary region coordinates
+            primary_x, primary_y, primary_w, primary_h = primary_region.coordinates
             cv2.rectangle(
                 debug_image,
-                (primary_region.x, primary_region.y),
-                (primary_region.x + primary_region.w, primary_region.y + primary_region.h),
+                (primary_x, primary_y),
+                (primary_x + primary_w, primary_y + primary_h),
                 (0, 255, 0),  # Green for primary
                 2,
             )
+            
+            # Draw secondary regions
             for sec_region in secondary_regions:
+                sec_x, sec_y, sec_w, sec_h = sec_region.coordinates
                 cv2.rectangle(
                     debug_image,
-                    (sec_region.x, sec_region.y),
-                    (sec_region.x + sec_region.w, sec_region.y + sec_region.h),
+                    (sec_x, sec_y),
+                    (sec_x + sec_w, sec_y + sec_h),
                     (255, 0, 0),  # Red for secondary
                     1,
                 )

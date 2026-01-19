@@ -172,9 +172,10 @@ def export_document(input_data: ExportInput) -> ExportOutput:
             
             # Crop image to primary region
             primary = page.detected_boundary.primary_region
+            primary_x, primary_y, primary_w, primary_h = primary.coordinates
             cropped_image = page.image_data[
-                primary.y:primary.y + primary.h,
-                primary.x:primary.x + primary.w,
+                primary_y:primary_y + primary_h,
+                primary_x:primary_x + primary_w,
             ]
             
             # Convert numpy array to PIL Image for JPEG compression
@@ -194,8 +195,8 @@ def export_document(input_data: ExportInput) -> ExportOutput:
             # Create PDF page from image
             img_doc = fitz.open("jpeg", img_bytes)
             pdf_page = pdf_doc.new_page(
-                width=primary.w,
-                height=primary.h,
+                width=primary_w,
+                height=primary_h,
             )
             pdf_page.insert_image(
                 pdf_page.rect,
